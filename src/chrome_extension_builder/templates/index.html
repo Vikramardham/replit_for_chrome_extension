@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Extension Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.95);
+            margin: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .chat-header h2 {
+            color: #495057;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message.assistant {
+            flex-direction: row;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .message.user .message-avatar {
+            background: #007bff;
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background: #28a745;
+            color: white;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #007bff;
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: #f8f9fa;
+            color: #495057;
+            border: 1px solid #e9ecef;
+        }
+
+        .chat-input-container {
+            padding: 1rem;
+            border-top: 1px solid #e9ecef;
+            background: white;
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: #007bff;
+        }
+
+        .send-button {
+            padding: 0.75rem 1.5rem;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .send-button:hover {
+            background: #0056b3;
+        }
+
+        .send-button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .browser-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.95);
+            margin: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .browser-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .browser-header h2 {
+            color: #495057;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .browser-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .browser-button {
+            padding: 0.5rem 1rem;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .browser-button:hover {
+            background: #1e7e34;
+        }
+
+        .browser-content {
+            flex: 1;
+            padding: 1rem;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .browser-placeholder {
+            text-align: center;
+            color: #6c757d;
+        }
+
+        .browser-placeholder h3 {
+            margin-bottom: 0.5rem;
+            color: #495057;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0.5rem;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #6c757d;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .chat-container,
+            .browser-container {
+                margin: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Chrome Extension Builder</h1>
+    </div>
+
+    <div class="main-container">
+        <div class="chat-container">
+            <div class="chat-header">
+                <h2>💬 Chat Interface</h2>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="message-avatar">AI</div>
+                    <div class="message-content">
+                        Hello! I'm your Chrome Extension Builder AI. Tell me what kind of extension you'd like to create, and I'll help you build it step by step. What's your idea?
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <form class="chat-input-form" id="chatForm">
+                    <input 
+                        type="text" 
+                        class="chat-input" 
+                        id="messageInput" 
+                        placeholder="Describe your Chrome extension idea..."
+                        autocomplete="off"
+                    >
+                    <button type="submit" class="send-button" id="sendButton">
+                        Send
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="browser-container">
+            <div class="browser-header">
+                <h2>🌐 Browser Environment</h2>
+                <div class="browser-controls">
+                    <button class="browser-button" id="loadExtensionBtn" disabled>
+                        Load Extension
+                    </button>
+                    <button class="browser-button" id="testExtensionBtn" disabled>
+                        Test Extension
+                    </button>
+                </div>
+            </div>
+            
+            <div class="browser-content">
+                <div class="browser-placeholder" id="browserPlaceholder">
+                    <h3>Browser Environment</h3>
+                    <p>Your extension will be loaded and tested here</p>
+                    <button class="browser-button" id="loadDummyExtensionBtn" style="margin-top: 20px;">
+                        Load Dummy Extension
+                    </button>
+                    <button class="browser-button" id="testBrowserBtn" style="margin-top: 10px; background: #17a2b8;">
+                        Test Browser
+                    </button>
+                    <button class="browser-button" id="closeBrowserBtn" style="margin-top: 10px; background: #dc3545;">
+                        Close Browser
+                    </button>
+                </div>
+                <div class="browser-iframe" id="browserIframe" style="display: none; width: 100%; height: 100%;">
+                    <iframe id="browserFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChatInterface {
+            constructor() {
+                this.messages = [];
+                this.currentSessionId = null;
+                this.isTyping = false;
+                
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatForm = document.getElementById('chatForm');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendButton = document.getElementById('sendButton');
+                
+                this.loadExtensionBtn = document.getElementById('loadExtensionBtn');
+                this.testExtensionBtn = document.getElementById('testExtensionBtn');
+                this.loadDummyExtensionBtn = document.getElementById('loadDummyExtensionBtn');
+                this.testBrowserBtn = document.getElementById('testBrowserBtn');
+                this.closeBrowserBtn = document.getElementById('closeBrowserBtn');
+                this.browserPlaceholder = document.getElementById('browserPlaceholder');
+                this.browserIframe = document.getElementById('browserIframe');
+                
+                this.initializeEventListeners();
+                this.createNewSession();
+            }
+            
+            initializeEventListeners() {
+                this.chatForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.sendMessage();
+                });
+                
+                this.loadExtensionBtn.addEventListener('click', () => {
+                    this.loadExtension();
+                });
+                
+                this.testExtensionBtn.addEventListener('click', () => {
+                    this.testExtension();
+                });
+                
+                this.loadDummyExtensionBtn.addEventListener('click', () => {
+                    this.loadDummyExtension();
+                });
+                
+                this.testBrowserBtn.addEventListener('click', () => {
+                    this.testBrowser();
+                });
+                
+                this.closeBrowserBtn.addEventListener('click', () => {
+                    this.closeBrowser();
+                });
+            }
+            
+            async createNewSession() {
+                try {
+                    const response = await fetch('/chat/sessions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ title: 'New Extension Project' })
+                    });
+                    
+                    const session = await response.json();
+                    this.currentSessionId = session.id;
+                } catch (error) {
+                    console.error('Error creating session:', error);
+                }
+            }
+            
+            async sendMessage() {
+                const content = this.messageInput.value.trim();
+                if (!content || this.isTyping) return;
+                
+                // Add user message to UI
+                this.addMessage(content, 'user');
+                this.messageInput.value = '';
+                this.sendButton.disabled = true;
+                
+                // Show typing indicator
+                this.showTypingIndicator();
+                
+                try {
+                    const response = await fetch('/chat/messages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            content: content,
+                            session_id: this.currentSessionId
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Hide typing indicator
+                    this.hideTypingIndicator();
+                    
+                    // Add assistant response to UI
+                    this.addMessage(data.message.content, 'assistant');
+                    
+                    // Enable extension buttons if extension was created
+                    if (data.session.extension_id) {
+                        this.loadExtensionBtn.disabled = false;
+                        this.testExtensionBtn.disabled = false;
+                    }
+                    
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    this.hideTypingIndicator();
+                    this.addMessage('Sorry, there was an error processing your message.', 'assistant');
+                }
+                
+                this.sendButton.disabled = false;
+            }
+            
+            addMessage(content, role) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${role}`;
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = role === 'user' ? 'U' : 'AI';
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.textContent = content;
+                
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(messageContent);
+                
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+            
+            showTypingIndicator() {
+                this.isTyping = true;
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message assistant typing-indicator';
+                typingDiv.id = 'typingIndicator';
+                
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = 'AI';
+                
+                const dotsDiv = document.createElement('div');
+                dotsDiv.className = 'message-content';
+                dotsDiv.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+                
+                typingDiv.appendChild(avatar);
+                typingDiv.appendChild(dotsDiv);
+                
+                this.chatMessages.appendChild(typingDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+            
+            hideTypingIndicator() {
+                this.isTyping = false;
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+            
+            async loadExtension() {
+                // TODO: Implement extension loading
+                console.log('Loading extension...');
+            }
+            
+            async testExtension() {
+                // TODO: Implement extension testing
+                console.log('Testing extension...');
+            }
+            
+            async loadDummyExtension() {
+                try {
+                    this.loadDummyExtensionBtn.disabled = true;
+                    this.loadDummyExtensionBtn.textContent = 'Loading...';
+                    
+                    const response = await fetch('/api/browser/load-dummy-extension', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        // Show success message
+                        this.browserPlaceholder.innerHTML = `
+                            <h3>✅ Dummy Extension Loading</h3>
+                            <p>${data.message}</p>
+                            <div style="margin-top: 20px; padding: 15px; background: #d4edda; border-radius: 8px; color: #155724;">
+                                <strong>Instructions:</strong>
+                                <ol style="margin: 10px 0; padding-left: 20px;">
+                                    <li>A Chrome browser window should have opened</li>
+                                    <li>Navigate to <code>chrome://extensions/</code> if not already there</li>
+                                    <li>Enable "Developer mode" (toggle in top-right)</li>
+                                    <li>Click "Load unpacked" button</li>
+                                    <li>Select the <code>dummy_extension</code> folder from this project</li>
+                                    <li>The extension should appear in the extensions list</li>
+                                    <li>Click the extension icon to test it</li>
+                                </ol>
+                            </div>
+                            <div style="margin-top: 15px;">
+                                <button class="browser-button" onclick="location.reload()" style="margin-right: 10px;">
+                                    Reset Browser Environment
+                                </button>
+                                <button class="browser-button" onclick="this.closeBrowser()" style="background: #dc3545;">
+                                    Close Browser
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        throw new Error(data.message || 'Failed to load dummy extension');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error loading dummy extension:', error);
+                    this.browserPlaceholder.innerHTML = `
+                        <h3>❌ Error Loading Extension</h3>
+                        <p>${error.message}</p>
+                        <button class="browser-button" onclick="location.reload()" style="margin-top: 15px;">
+                            Try Again
+                        </button>
+                    `;
+                } finally {
+                    this.loadDummyExtensionBtn.disabled = false;
+                    this.loadDummyExtensionBtn.textContent = 'Load Dummy Extension';
+                }
+            }
+            
+            async testBrowser() {
+                try {
+                    this.testBrowserBtn.disabled = true;
+                    this.testBrowserBtn.textContent = 'Testing...';
+                    
+                    const response = await fetch('/api/browser/test', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        this.browserPlaceholder.innerHTML = `
+                            <h3>✅ Browser Test Successful</h3>
+                            <p>${data.message}</p>
+                            <div style="margin-top: 20px; padding: 15px; background: #d4edda; border-radius: 8px; color: #155724;">
+                                <strong>Browser is working correctly!</strong>
+                                <p>You can now try loading the dummy extension.</p>
+                            </div>
+                            <button class="browser-button" onclick="location.reload()" style="margin-top: 15px;">
+                                Reset Browser Environment
+                            </button>
+                        `;
+                    } else {
+                        throw new Error(data.message || 'Browser test failed');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error testing browser:', error);
+                    this.browserPlaceholder.innerHTML = `
+                        <h3>❌ Browser Test Failed</h3>
+                        <p>${error.message}</p>
+                        <div style="margin-top: 20px; padding: 15px; background: #f8d7da; border-radius: 8px; color: #721c24;">
+                            <strong>Browser setup issue detected:</strong>
+                            <ul style="margin: 10px 0; padding-left: 20px;">
+                                <li>Check if Chrome is installed</li>
+                                <li>Ensure Playwright browsers are installed</li>
+                                <li>Try running: <code>playwright install chromium</code></li>
+                            </ul>
+                        </div>
+                        <button class="browser-button" onclick="location.reload()" style="margin-top: 15px;">
+                            Try Again
+                        </button>
+                    `;
+                } finally {
+                    this.testBrowserBtn.disabled = false;
+                    this.testBrowserBtn.textContent = 'Test Browser';
+                }
+            }
+            
+            async closeBrowser() {
+                try {
+                    this.closeBrowserBtn.disabled = true;
+                    this.closeBrowserBtn.textContent = 'Closing...';
+                    
+                    const response = await fetch('/api/browser/close', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.status === 'success') {
+                        this.browserPlaceholder.innerHTML = `
+                            <h3>✅ Browser Closed</h3>
+                            <p>${data.message}</p>
+                            <button class="browser-button" onclick="location.reload()" style="margin-top: 15px;">
+                                Reset Browser Environment
+                            </button>
+                        `;
+                    } else {
+                        this.browserPlaceholder.innerHTML = `
+                            <h3>ℹ️ Browser Status</h3>
+                            <p>${data.message}</p>
+                            <button class="browser-button" onclick="location.reload()" style="margin-top: 15px;">
+                                Reset Browser Environment
+                            </button>
+                        `;
+                    }
+                    
+                } catch (error) {
+                    console.error('Error closing browser:', error);
+                    this.browserPlaceholder.innerHTML = `
+                        <h3>❌ Error Closing Browser</h3>
+                        <p>${error.message}</p>
+                        <button class="browser-button" onclick="location.reload()" style="margin-top: 15px;">
+                            Try Again
+                        </button>
+                    `;
+                } finally {
+                    this.closeBrowserBtn.disabled = false;
+                    this.closeBrowserBtn.textContent = 'Close Browser';
+                }
+            }
+        }
+        
+        // Initialize the chat interface when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChatInterface();
+        });
+    </script>
+</body>
+</html> 

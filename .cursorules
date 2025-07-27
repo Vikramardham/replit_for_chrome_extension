@@ -1,0 +1,10 @@
+1. Always use best software engineering practises.
+    - Do not use duplicated code
+    - Use modular or OOP as needed
+    - Add separate files/folders by abstracting things where necessary
+    - Keep things simple
+2. Maintain a scratchpad and keep it up to date on planning and execution. Update it with what works what failed
+3. When fixing something, think through a few solutions and propose a couple of most likely ones before applying the solution
+4. Make the code easy to read and extend
+5. Keep the code as short as possible.
+6. Do not code before thinking through or discussing your approach with the user
