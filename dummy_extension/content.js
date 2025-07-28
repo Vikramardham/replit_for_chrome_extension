@@ -8,32 +8,78 @@ let originalStyles = {};
 function initializeExtension() {
     console.log('✅ Dummy Extension initialized on:', window.location.href);
     
-    // Add a small indicator to show the extension is active
+    // Add a more visible indicator to show the extension is active
     const indicator = document.createElement('div');
     indicator.id = 'dummy-extension-indicator';
     indicator.style.cssText = `
         position: fixed;
-        top: 10px;
-        right: 10px;
+        top: 20px;
+        right: 20px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 8px 12px;
-        border-radius: 20px;
-        font-size: 12px;
+        padding: 15px 20px;
+        border-radius: 25px;
+        font-size: 14px;
         font-family: Arial, sans-serif;
+        font-weight: bold;
         z-index: 10000;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         pointer-events: none;
-        opacity: 0.8;
+        opacity: 1;
+        border: 2px solid white;
+        animation: pulse 2s infinite;
     `;
     indicator.textContent = '🚀 Dummy Extension Active';
     document.body.appendChild(indicator);
     
-    // Hide indicator after 3 seconds
+    // Add a permanent floating button for testing
+    const testButton = document.createElement('button');
+    testButton.id = 'dummy-extension-test-btn';
+    testButton.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        z-index: 10000;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        cursor: pointer;
+        border: 2px solid white;
+    `;
+    testButton.textContent = '🧪 Test Extension';
+    testButton.onclick = testFunction;
+    document.body.appendChild(testButton);
+    
+    // Show success message
     setTimeout(() => {
-        indicator.style.opacity = '0';
-        setTimeout(() => indicator.remove(), 500);
-    }, 3000);
+        const successMsg = document.createElement('div');
+        successMsg.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #28a745;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 10001;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.4);
+            animation: fadeInOut 3s ease-in-out;
+        `;
+        successMsg.textContent = '✅ Dummy Extension Successfully Loaded!';
+        document.body.appendChild(successMsg);
+        
+        setTimeout(() => successMsg.remove(), 3000);
+    }, 1000);
 }
 
 // Test function
@@ -162,6 +208,11 @@ style.textContent = `
         0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
         50% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
     }
 `;
 document.head.appendChild(style);

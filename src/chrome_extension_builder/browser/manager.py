@@ -37,23 +37,39 @@ class BrowserManager:
             # Create a temporary user data directory
             self.user_data_dir = tempfile.mkdtemp()
             
-            # Launch persistent context - this is required for Chrome extensions
+            # Get the absolute path to the dummy_extension folder
+            current_dir = os.getcwd()
+            dummy_extension_path = os.path.join(current_dir, "dummy_extension")
+            
+            # Launch persistent context - following official Playwright docs exactly
             self.context = await self.playwright.chromium.launch_persistent_context(
                 user_data_dir=self.user_data_dir,
                 headless=False,  # Keep visible for testing
+                channel='chromium',  # Use chromium channel for extension support
                 args=[
-                    '--disable-web-security',
-                    '--disable-features=VizDisplayCompositor',
-                    '--no-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-background-timer-throttling',
-                    '--disable-backgrounding-occluded-windows',
-                    '--disable-renderer-backgrounding'
+                    f'--disable-extensions-except={dummy_extension_path}',
+                    f'--load-extension={dummy_extension_path}'
                 ]
             )
             
             # Get the first page from the persistent context
             self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+            
+            # Get the extension ID from service workers (as per docs)
+            try:
+                service_workers = self.context.service_workers()
+                if service_workers:
+                    service_worker = service_workers[0]
+                    extension_id = service_worker.url.split('/')[2]
+                    self.extension_id = extension_id
+                else:
+                    # Wait for service worker to appear
+                    service_worker = await self.context.wait_for_event('serviceworker')
+                    extension_id = service_worker.url.split('/')[2]
+                    self.extension_id = extension_id
+            except Exception as e:
+                self.extension_id = None
+                
         except Exception as e:
             print(f"Error starting browser: {e}")
             raise
@@ -100,18 +116,63 @@ class BrowserManager:
                     with open(file_path, 'w') as f:
                         f.write(content)
                 
-                # Create new page with extension loaded
-                context = await self.browser.new_context()
-                self.page = await context.new_page()
+                # Use the existing page from persistent context
+                if not self.page:
+                    self.page = await self.context.new_page()
                 
                 # Load extension
                 await self.page.goto("chrome://extensions/")
-                await self.page.click('[aria-label="Developer mode"]')
-                await self.page.click('[aria-label="Load unpacked"]')
+                await self.page.wait_for_load_state('networkidle')
                 
-                # Select the extension directory
-                # Note: This is a simplified version. In production, you'd need
-                # to handle file dialog interactions more carefully
+                # Enable developer mode
+                developer_mode_found = False
+                selectors = [
+                    '[aria-label="Developer mode"]',
+                    'input[type="checkbox"]',
+                    'input[name="developer"]',
+                    '.developer-mode-toggle',
+                    'input[role="checkbox"]',
+                    'input[type="checkbox"][aria-label*="Developer"]',
+                    'input[type="checkbox"][aria-label*="developer"]'
+                ]
+                
+                for selector in selectors:
+                    try:
+                        element = await self.page.wait_for_selector(selector, timeout=2000)
+                        if element:
+                            await element.click()
+                            developer_mode_found = True
+                            break
+                    except Exception:
+                        continue
+                
+                # Wait for developer mode to take effect
+                await self.page.wait_for_timeout(2000)
+                
+                # Click load unpacked button
+                load_unpacked_found = False
+                load_selectors = [
+                    '[aria-label="Load unpacked"]',
+                    'button:has-text("Load unpacked")',
+                    'button:has-text("LOAD UNPACKED")',
+                    'button[data-testid="load-unpacked"]',
+                    'button:has-text("Load")',
+                    'button[aria-label*="Load unpacked"]',
+                    'button[aria-label*="load unpacked"]'
+                ]
+                
+                for selector in load_selectors:
+                    try:
+                        element = await self.page.wait_for_selector(selector, timeout=2000)
+                        if element:
+                            await element.click()
+                            load_unpacked_found = True
+                            break
+                    except Exception:
+                        continue
+                
+                # Wait for file dialog to appear
+                await self.page.wait_for_timeout(3000)
                 
                 session = self.sessions.get(extension.id)
                 if session:
@@ -131,64 +192,23 @@ class BrowserManager:
             if not self.page:
                 self.page = await self.context.new_page()
             
-            # Navigate to extensions page
-            await self.page.goto("chrome://extensions/")
-            print("Successfully navigated to chrome://extensions/")
-            
-            # Wait for page to load
-            await self.page.wait_for_load_state('networkidle')
-            
-            # Enable developer mode
-            developer_mode_found = False
-            selectors = [
-                '[aria-label="Developer mode"]',
-                'input[type="checkbox"]',
-                'input[name="developer"]',
-                '.developer-mode-toggle',
-                'input[role="checkbox"]',
-                'input[type="checkbox"][aria-label*="Developer"]',
-                'input[type="checkbox"][aria-label*="developer"]'
-            ]
-            
-            for selector in selectors:
+            # Test 1: Navigate to the extension popup page
+            if hasattr(self, 'extension_id') and self.extension_id:
                 try:
-                    element = await self.page.wait_for_selector(selector, timeout=2000)
-                    if element:
-                        await element.click()
-                        developer_mode_found = True
-                        break
-                except Exception:
-                    continue
-            
-            # Wait for developer mode to take effect
-            await self.page.wait_for_timeout(2000)
-            
-            # Click load unpacked button
-            load_unpacked_found = False
-            load_selectors = [
-                '[aria-label="Load unpacked"]',
-                'button:has-text("Load unpacked")',
-                'button:has-text("LOAD UNPACKED")',
-                'button[data-testid="load-unpacked"]',
-                'button:has-text("Load")',
-                'button[aria-label*="Load unpacked"]',
-                'button[aria-label*="load unpacked"]'
-            ]
-            
-            for selector in load_selectors:
-                try:
-                    element = await self.page.wait_for_selector(selector, timeout=2000)
-                    if element:
-                        await element.click()
-                        load_unpacked_found = True
-                        break
-                except Exception:
-                    continue
-            
-            # Wait for file dialog to appear
-            await self.page.wait_for_timeout(3000)
-            
-            return True
+                    popup_url = f"chrome-extension://{self.extension_id}/popup.html"
+                    await self.page.goto(popup_url)
+                    await self.page.wait_for_load_state('networkidle')
+                    
+                    # Check if popup content is loaded
+                    popup_content = await self.page.content()
+                    if "Dummy Extension" in popup_content:
+                        return True
+                    else:
+                        return False
+                except Exception as e:
+                    return False
+            else:
+                return False
                 
         except Exception as e:
             print(f"Error loading dummy extension: {e}")
@@ -228,3 +248,32 @@ class BrowserManager:
             raise Exception("No active browser page")
         
         return await self.page.screenshot() 
+
+    async def test_extension_on_webpage(self) -> bool:
+        """Test the extension on a regular webpage to verify content script functionality."""
+        try:
+            # Navigate to a test page
+            await self.page.goto("https://www.google.com")
+            
+            # Wait for page to load
+            await self.page.wait_for_load_state('networkidle')
+            
+            # Wait a bit for content script to load
+            await self.page.wait_for_timeout(3000)
+            
+            # Check if our extension indicator appears
+            try:
+                indicator_found = await self.page.wait_for_selector(
+                    '#dummy-extension-indicator', 
+                    timeout=5000
+                )
+                if indicator_found:
+                    return True
+                else:
+                    return False
+            except Exception as e:
+                return False
+                
+        except Exception as e:
+            print(f"Error testing extension on webpage: {e}")
+            return False 

@@ -17,9 +17,13 @@ class CodeGenerationAgent:
     
     def __init__(self, api_key: Optional[str] = None):
         """Initialize the code generation agent."""
-        self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
+        # Try to get API key from parameter, then environment variables
+        self.api_key = api_key or os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
-            raise ValueError("Google API key is required")
+            raise ValueError(
+                "Google API key is required. Please set either GOOGLE_API_KEY or GEMINI_API_KEY "
+                "in your .env file or pass it as a parameter."
+            )
         
         # Configure the model
         self.model = GenerativeModel(

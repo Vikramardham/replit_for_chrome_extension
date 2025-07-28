@@ -5,15 +5,32 @@ Main application entry point for Chrome Extension Builder.
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
-from fastapi.staticfiles import StaticFiles
+# from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
+from pathlib import Path
 
 from .api.routes import router as api_router
 from .chat.routes import router as chat_router
 
-# Load environment variables
+# Load environment variables from multiple locations
+# First load from root .env
 load_dotenv()
+
+# Then load from package .env (this will override if needed)
+package_env_path = Path(__file__).parent / ".env"
+if package_env_path.exists():
+    load_dotenv(package_env_path)
+
+# Ensure both GOOGLE_API_KEY and GEMINI_API_KEY are set
+if os.getenv("GOOGLE_API_KEY") and not os.getenv("GEMINI_API_KEY"):
+    os.environ["GEMINI_API_KEY"] = os.getenv("GOOGLE_API_KEY")
+elif os.getenv("GEMINI_API_KEY") and not os.getenv("GOOGLE_API_KEY"):
+    os.environ["GOOGLE_API_KEY"] = os.getenv("GEMINI_API_KEY")
+
+# Print environment status for debugging
+print(f"Environment loaded - GOOGLE_API_KEY: {'✓' if os.getenv('GOOGLE_API_KEY') else '✗'}")
+print(f"Environment loaded - GEMINI_API_KEY: {'✓' if os.getenv('GEMINI_API_KEY') else '✗'}")
 
 
 @asynccontextmanager
@@ -35,8 +52,8 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Mount static files
-    app.mount("/static", StaticFiles(directory="src/chrome_extension_builder/static"), name="static")
+    # Static files are not needed for current setup
+    # app.mount("/static", StaticFiles(directory="src/chrome_extension_builder/static"), name="static")
 
     # Include routers
     app.include_router(api_router, prefix="/api")

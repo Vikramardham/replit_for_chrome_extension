@@ -2,6 +2,7 @@
 Chat-related data models.
 """
 
+import uuid
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional
@@ -17,18 +18,18 @@ class MessageRole(str, Enum):
 
 class ChatMessage(BaseModel):
     """Represents a single chat message."""
-    id: str = Field(..., description="Unique message ID")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()), description="Unique message ID")
     role: MessageRole = Field(..., description="Message role")
     content: str = Field(..., description="Message content")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    session_id: str = Field(..., description="Session ID this message belongs to")
+    session_id: Optional[str] = Field(None, description="Session ID this message belongs to")
 
 
 class ChatSession(BaseModel):
     """Represents a chat session."""
     id: str = Field(..., description="Unique session ID")
     user_id: Optional[str] = Field(None, description="User ID")
-    title: str = Field(..., description="Session title")
+    title: str = Field(default="New Chat", description="Session title")
     messages: List[ChatMessage] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

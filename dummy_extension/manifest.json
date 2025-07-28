@@ -5,8 +5,7 @@
   "description": "A simple test extension for Chrome Extension Builder",
   "permissions": ["activeTab"],
   "action": {
-    "default_popup": "popup.html",
-    "default_title": "Dummy Extension"
+    "default_popup": "popup.html"
   },
   "content_scripts": [
     {

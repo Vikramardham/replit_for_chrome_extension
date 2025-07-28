@@ -160,13 +160,25 @@ async def load_dummy_extension():
             _browser_manager = BrowserManager()
             await _browser_manager.start()
         
-        # Load dummy extension
-        success = await _browser_manager.load_dummy_extension()
+        # Test extension popup
+        popup_success = await _browser_manager.load_dummy_extension()
         
-        if success:
+        # Test content script on webpage
+        content_success = await _browser_manager.test_extension_on_webpage()
+        
+        if popup_success and content_success:
             return {
                 "status": "success",
-                "message": "Dummy extension loading initiated. Browser window should remain open. Please manually select the dummy_extension folder in the file dialog."
+                "message": "Dummy extension loaded and tested successfully! Both popup and content script are working.",
+                "popup_working": popup_success,
+                "content_script_working": content_success
+            }
+        elif popup_success:
+            return {
+                "status": "partial_success",
+                "message": "Extension popup loaded but content script may not be working.",
+                "popup_working": popup_success,
+                "content_script_working": content_success
             }
         else:
             raise HTTPException(status_code=500, detail="Failed to load dummy extension")
