@@ -5,7 +5,7 @@ Main application entry point for Chrome Extension Builder.
 import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
-# from fastapi.staticfiles import StaticFiles
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from dotenv import load_dotenv
 from pathlib import Path
@@ -52,8 +52,8 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Static files are not needed for current setup
-    # app.mount("/static", StaticFiles(directory="src/chrome_extension_builder/static"), name="static")
+    # Mount static files
+    app.mount("/static", StaticFiles(directory="src/chrome_extension_builder/static"), name="static")
 
     # Include routers
     app.include_router(api_router, prefix="/api")

@@ -1,21 +1,26 @@
 """
-Chat routes for the Chrome Extension Builder.
+Chat routes for Chrome Extension Builder.
 """
 
 import uuid
 from datetime import datetime
-from typing import Dict, List
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
+from typing import List, Dict, Any
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from ..models.chat import ChatMessage, MessageRole, ChatSession
+from ..models.chat import ChatSession, ChatMessage, MessageRole
 from ..chat.agent import ChatAgent
 
 router = APIRouter()
 
 # In-memory storage for chat sessions
 chat_sessions: Dict[str, ChatSession] = {}
+
+# Import extensions dictionary from api routes
+from ..api.routes import extensions
+
+# Global chat agent instance
 _chat_agent = None
 
 
@@ -93,10 +98,14 @@ async def send_message(session_id: str, request: MessageRequest):
     
     print(f"✅ Message processed successfully. Action: {result.get('action', 'unknown')}")
     
-    # Convert extension to JSON-serializable dict
+    # Store generated extension in extensions dictionary
     extension_dict = None
     if result.get("extension"):
         extension = result.get("extension")
+        # Store the extension in the global extensions dictionary
+        extensions[extension.id] = extension
+        print(f"💾 Stored extension '{extension.name}' with ID: {extension.id}")
+        
         extension_dict = {
             "id": extension.id,
             "name": extension.name,
@@ -157,10 +166,14 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             # Update session
             session.updated_at = datetime.utcnow()
             
-            # Convert extension to JSON-serializable dict
+            # Store generated extension in extensions dictionary
             extension_dict = None
             if result.get("extension"):
                 extension = result.get("extension")
+                # Store the extension in the global extensions dictionary
+                extensions[extension.id] = extension
+                print(f"💾 Stored extension '{extension.name}' with ID: {extension.id}")
+                
                 extension_dict = {
                     "id": extension.id,
                     "name": extension.name,

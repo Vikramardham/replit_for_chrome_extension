@@ -1,0 +1,29 @@
+{
+  "name": "chrome-extension-builder",
+  "version": "1.0.0",
+  "description": "A modern Chrome Extension Builder with AI-powered code generation",
+  "main": "index.js",
+  "scripts": {
+    "dev": "python -m uvicorn src.chrome_extension_builder.main:app --reload --host 0.0.0.0 --port 8000",
+    "build": "tailwindcss -i ./src/chrome_extension_builder/static/css/tailwind.css -o ./src/chrome_extension_builder/static/css/output.css --watch",
+    "start": "python -m uvicorn src.chrome_extension_builder.main:app --host 0.0.0.0 --port 8000"
+  },
+  "keywords": [
+    "chrome-extension",
+    "ai",
+    "code-generation",
+    "fastapi",
+    "tailwindcss"
+  ],
+  "author": "Chrome Extension Builder Team",
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32"
+  },
+  "dependencies": {
+    "monaco-editor": "^0.45.0",
+    "font-awesome": "^6.0.0"
+  }
+} 

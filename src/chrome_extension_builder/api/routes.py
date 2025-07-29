@@ -147,6 +147,45 @@ async def load_extension_in_browser(session_id: str):
 # Global browser manager instance to keep browser alive
 _browser_manager = None
 
+@router.post("/browser/load-extension-manual")
+async def load_extension_manual(extension_id: str):
+    """Manually load an extension - start browser with extension loaded."""
+    global _browser_manager
+    
+    try:
+        from ..browser.manager import BrowserManager
+        
+        # Get the extension
+        if extension_id not in extensions:
+            raise HTTPException(status_code=404, detail="Extension not found")
+        
+        extension = extensions[extension_id]
+        
+        # Close existing browser manager if it exists
+        if _browser_manager:
+            await _browser_manager.stop()
+            _browser_manager = None
+        
+        # Create new browser manager and start with extension loaded
+        _browser_manager = BrowserManager()
+        await _browser_manager.start_with_extension(extension)
+        
+        return {
+            "status": "success",
+            "message": f"Browser started with extension '{extension.name}' loaded!",
+            "extension_dir": f"extensions/{extension.id}",
+            "extension_id": _browser_manager.extension_id,
+            "instructions": [
+                "1. The extension is already loaded in the browser",
+                "2. You can test it by navigating to any website",
+                "3. Check the extension icon in the browser toolbar",
+                "4. Click the extension icon to test the popup"
+            ]
+        }
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error starting browser with extension: {str(e)}")
+
 @router.post("/browser/load-dummy-extension")
 async def load_dummy_extension():
     """Load the dummy extension for testing."""
@@ -155,15 +194,35 @@ async def load_dummy_extension():
     try:
         from ..browser.manager import BrowserManager
         
-        # Create browser manager instance only if it doesn't exist
-        if _browser_manager is None:
-            _browser_manager = BrowserManager()
-            await _browser_manager.start()
+        # Close existing browser manager if it exists
+        if _browser_manager:
+            await _browser_manager.stop()
+            _browser_manager = None
         
-        # Test extension popup
-        popup_success = await _browser_manager.load_dummy_extension()
+        # Create new browser manager and start with dummy extension
+        _browser_manager = BrowserManager()
+        await _browser_manager.start_with_dummy_extension()
         
-        # Test content script on webpage
+        # Test the dummy extension
+        print("🧪 Testing dummy extension...")
+        
+        # Test popup
+        popup_success = False
+        if _browser_manager.extension_id:
+            try:
+                popup_url = f"chrome-extension://{_browser_manager.extension_id}/popup.html"
+                popup_page = await _browser_manager.context.new_page()
+                await popup_page.goto(popup_url)
+                await popup_page.wait_for_load_state('networkidle')
+                
+                popup_content = await popup_page.content()
+                popup_success = "Dummy Extension" in popup_content
+                
+                await popup_page.close()
+            except Exception as e:
+                print(f"❌ Error testing popup: {e}")
+        
+        # Test content script
         content_success = await _browser_manager.test_extension_on_webpage()
         
         if popup_success and content_success:
@@ -171,14 +230,16 @@ async def load_dummy_extension():
                 "status": "success",
                 "message": "Dummy extension loaded and tested successfully! Both popup and content script are working.",
                 "popup_working": popup_success,
-                "content_script_working": content_success
+                "content_script_working": content_success,
+                "extension_id": _browser_manager.extension_id
             }
         elif popup_success:
             return {
                 "status": "partial_success",
                 "message": "Extension popup loaded but content script may not be working.",
                 "popup_working": popup_success,
-                "content_script_working": content_success
+                "content_script_working": content_success,
+                "extension_id": _browser_manager.extension_id
             }
         else:
             raise HTTPException(status_code=500, detail="Failed to load dummy extension")
