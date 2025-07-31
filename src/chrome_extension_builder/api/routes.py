@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 
 from ..models.extension import Extension, ExtensionManifest
-from ..models.browser import BrowserSession
+from ..models.browser import BrowserSession, LogAnalysis
 
 router = APIRouter()
 
@@ -148,7 +148,7 @@ async def load_extension_in_browser(session_id: str):
 _browser_manager = None
 
 @router.post("/browser/load-extension-manual")
-async def load_extension_manual(extension_id: str):
+async def load_extension_manual(extension_id: str, enable_debug: bool = True):
     """Manually load an extension - start browser with extension loaded."""
     global _browser_manager
     
@@ -168,18 +168,24 @@ async def load_extension_manual(extension_id: str):
         
         # Create new browser manager and start with extension loaded
         _browser_manager = BrowserManager()
-        await _browser_manager.start_with_extension(extension)
+        await _browser_manager.start_with_extension(extension, enable_debug=enable_debug)
+        
+        debug_info = ""
+        if enable_debug and _browser_manager.current_debug_session:
+            debug_info = f" Debug session started: {_browser_manager.current_debug_session.id}"
         
         return {
             "status": "success",
-            "message": f"Browser started with extension '{extension.name}' loaded!",
+            "message": f"Browser started with extension '{extension.name}' loaded!{debug_info}",
             "extension_dir": f"extensions/{extension.id}",
             "extension_id": _browser_manager.extension_id,
+            "debug_session_id": _browser_manager.current_debug_session.id if _browser_manager.current_debug_session else None,
             "instructions": [
                 "1. The extension is already loaded in the browser",
                 "2. You can test it by navigating to any website",
                 "3. Check the extension icon in the browser toolbar",
-                "4. Click the extension icon to test the popup"
+                "4. Click the extension icon to test the popup",
+                "5. All events and errors are being logged for debugging"
             ]
         }
             
@@ -303,6 +309,100 @@ async def test_browser():
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Browser test failed: {str(e)}")
+
+
+@router.get("/browser/debug-logs/{session_id}")
+async def get_debug_logs(session_id: str):
+    """Get debug logs for a session."""
+    global _browser_manager
+    
+    try:
+        if not _browser_manager:
+            raise HTTPException(status_code=404, detail="No active browser session")
+        
+        logs = await _browser_manager.get_debug_logs(session_id)
+        if not logs:
+            raise HTTPException(status_code=404, detail="No debug logs found for session")
+        
+        return {
+            "status": "success",
+            "session_id": session_id,
+            "logs": logs.dict()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting debug logs: {str(e)}")
+
+
+@router.get("/browser/debug-summary/{session_id}")
+async def get_debug_summary(session_id: str):
+    """Get debug session summary."""
+    global _browser_manager
+    
+    try:
+        if not _browser_manager:
+            raise HTTPException(status_code=404, detail="No active browser session")
+        
+        summary = _browser_manager.get_debug_summary(session_id)
+        if not summary:
+            raise HTTPException(status_code=404, detail="No debug session found")
+        
+        return {
+            "status": "success",
+            "session_id": session_id,
+            "summary": summary
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting debug summary: {str(e)}")
+
+
+@router.post("/browser/stop-debug/{session_id}")
+async def stop_debug_session(session_id: str):
+    """Stop debug session and save logs."""
+    global _browser_manager
+    
+    try:
+        if not _browser_manager:
+            raise HTTPException(status_code=404, detail="No active browser session")
+        
+        await _browser_manager.stop_debug_session(session_id)
+        
+        return {
+            "status": "success",
+            "message": f"Debug session {session_id} stopped and logs saved"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error stopping debug session: {str(e)}")
+
+
+@router.get("/browser/current-debug-session")
+async def get_current_debug_session():
+    """Get current debug session info."""
+    global _browser_manager
+    
+    try:
+        if not _browser_manager or not _browser_manager.current_debug_session:
+            return {
+                "status": "info",
+                "message": "No active debug session"
+            }
+        
+        session = _browser_manager.current_debug_session
+        summary = _browser_manager.get_debug_summary(session.id)
+        
+        return {
+            "status": "success",
+            "session_id": session.id,
+            "extension_id": session.extension_id,
+            "is_active": session.is_active,
+            "log_file_path": session.log_file_path,
+            "summary": summary
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting current debug session: {str(e)}")
 
 
  

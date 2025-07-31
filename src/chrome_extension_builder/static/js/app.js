@@ -123,6 +123,22 @@ class ChromeExtensionBuilder {
                         <p class="text-sm text-gray-300">Click "Load Extension in Browser" to start the browser with the extension loaded.</p>
                     </div>
                 `, 'success');
+            } else if (data.action === 'debug_analysis' && data.debug_session_id) {
+                console.log('Debug analysis completed:', data);
+                
+                // Update debug session ID
+                this.currentDebugSessionId = data.debug_session_id;
+                
+                // Show debug summary if available
+                if (data.log_summary) {
+                    this.showNotification(`
+                        <div class="mb-4">
+                            <h4 class="text-lg font-semibold mb-2">🔍 Debug Analysis Complete!</h4>
+                            <p class="mb-2">Analyzed ${data.log_summary.total_events} events, ${data.log_summary.total_errors} errors, and ${data.log_summary.total_console_logs} console logs.</p>
+                            <p class="text-sm text-gray-300">Check the chat for detailed analysis and recommendations.</p>
+                        </div>
+                    `, 'success');
+                }
             }
         } else if (data.type === 'cli_output') {
             this.addCliOutput(data.content, data.stream);
@@ -452,6 +468,12 @@ class ChromeExtensionBuilder {
             if (response.ok) {
                 this.showNotification(result.message, 'success');
                 
+                // Store debug session ID if available
+                if (result.debug_session_id) {
+                    this.currentDebugSessionId = result.debug_session_id;
+                    console.log("🔍 Debug session started:", this.currentDebugSessionId);
+                }
+                
                 // Show instructions
                 if (result.instructions) {
                     let instructionsHtml = '<div class="mb-4"><h4 class="text-lg font-semibold mb-2">Manual Loading Instructions:</h4><ol class="list-decimal list-inside space-y-1">';
@@ -489,9 +511,53 @@ class ChromeExtensionBuilder {
             const result = await response.json();
             console.log('Close browser result:', result);
             this.showNotification('Browser closed', 'success');
+            
+            // Clear debug session
+            this.currentDebugSessionId = null;
         } catch (error) {
             console.error('Failed to close browser:', error);
             this.showNotification('Failed to close browser', 'error');
+        }
+    }
+    
+    async getDebugSummary() {
+        try {
+            if (!this.currentDebugSessionId) {
+                this.showNotification('No active debug session', 'warning');
+                return;
+            }
+            
+            const response = await fetch(`/api/browser/debug-summary/${this.currentDebugSessionId}`);
+            const result = await response.json();
+            
+            if (response.ok) {
+                console.log('Debug summary:', result);
+                this.showNotification(`Debug session: ${result.summary.total_events} events, ${result.summary.total_errors} errors`, 'info');
+            } else {
+                this.showNotification(`Error: ${result.detail}`, 'error');
+            }
+        } catch (error) {
+            console.error('Failed to get debug summary:', error);
+            this.showNotification('Failed to get debug summary', 'error');
+        }
+    }
+    
+    async getCurrentDebugSession() {
+        try {
+            const response = await fetch('/api/browser/current-debug-session');
+            const result = await response.json();
+            
+            if (response.ok && result.status === 'success') {
+                this.currentDebugSessionId = result.session_id;
+                console.log('Current debug session:', result);
+                return result;
+            } else {
+                console.log('No active debug session');
+                return null;
+            }
+        } catch (error) {
+            console.error('Failed to get current debug session:', error);
+            return null;
         }
     }
     
@@ -563,6 +629,9 @@ class ChromeExtensionBuilder {
         document.getElementById('load-extension-btn').addEventListener('click', () => this.loadExtensionManual());
         document.getElementById('test-browser-btn').addEventListener('click', () => this.testBrowser());
         document.getElementById('close-browser-btn').addEventListener('click', () => this.closeBrowser());
+        
+        // Debug functionality
+        this.currentDebugSessionId = null;
         
         // Test file tree update (for debugging)
         window.testFileTree = () => {

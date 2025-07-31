@@ -13,7 +13,8 @@ from playwright.async_api import async_playwright, Browser, Page
 from datetime import datetime
 
 from ..models.extension import Extension
-from ..models.browser import BrowserSession
+from ..models.browser import BrowserSession, DebugSession, LogAnalysis
+from .event_logger import BrowserEventLogger, DebugSessionManager
 
 
 class BrowserManager:
@@ -27,6 +28,8 @@ class BrowserManager:
         self.sessions: Dict[str, BrowserSession] = {}
         self.extensions_dir = Path("extensions")  # Directory to store generated extensions
         self.extension_id = None
+        self.debug_manager = DebugSessionManager()
+        self.current_debug_session: Optional[DebugSession] = None
     
     async def start(self):
         """Start the browser automation with persistent context for extensions."""
@@ -179,7 +182,7 @@ class BrowserManager:
             print(f"❌ Error in automated extension loading: {e}")
             return {"success": False, "error": str(e)}
     
-    async def start_with_extension(self, extension: Extension):
+    async def start_with_extension(self, extension: Extension, enable_debug: bool = True):
         """Start the browser with an extension loaded from the beginning."""
         try:
             print(f"🚀 Starting browser with extension: {extension.name}")
@@ -281,6 +284,14 @@ class BrowserManager:
             
             # 5. Get the first page
             self.page = self.context.pages[0] if self.context.pages else await self.context.new_page()
+            
+            # 6. Start debug session if enabled
+            if enable_debug and self.extension_id:
+                session_id = f"debug_{extension.id}_{int(datetime.now().timestamp())}"
+                self.current_debug_session = await self.debug_manager.start_debug_session(
+                    session_id, extension.id, self.page, self.context
+                )
+                print(f"🔍 Debug session started: {session_id}")
             
             print("✅ Browser started with extension successfully")
             
@@ -508,4 +519,38 @@ class BrowserManager:
                 
         except Exception as e:
             print(f"Error testing extension on webpage: {e}")
-            return False 
+            return False
+    
+    async def get_debug_logs(self, session_id: str = None) -> Optional[LogAnalysis]:
+        """Get debug logs for analysis."""
+        if not session_id and self.current_debug_session:
+            session_id = self.current_debug_session.id
+        
+        if session_id:
+            try:
+                return await self.debug_manager.analyze_logs_for_ai(session_id)
+            except Exception as e:
+                print(f"❌ Error getting debug logs: {e}")
+                return None
+        return None
+    
+    async def stop_debug_session(self, session_id: str = None):
+        """Stop debug session and save logs."""
+        if not session_id and self.current_debug_session:
+            session_id = self.current_debug_session.id
+        
+        if session_id:
+            await self.debug_manager.stop_debug_session(session_id)
+            if self.current_debug_session and self.current_debug_session.id == session_id:
+                self.current_debug_session = None
+    
+    def get_debug_summary(self, session_id: str = None) -> Dict[str, Any]:
+        """Get a summary of debug session."""
+        if not session_id and self.current_debug_session:
+            session_id = self.current_debug_session.id
+        
+        if session_id:
+            logger = self.debug_manager.get_session_logs(session_id)
+            if logger:
+                return logger.get_log_summary()
+        return {} 

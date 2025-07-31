@@ -8,3 +8,8 @@ Architecture
 1. Chat interface that talks to the user
 2. Chrome browser environment where the extension is loaded and the console logs are viewed 
 3. A background coding agent that writes and executes code (e.g: gemini cli)
+
+
+## Improve coding agent
+1. use simple images as png
+2. improve follow up chats to fix errors and not continue from scratch each time
