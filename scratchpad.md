@@ -1,226 +1,256 @@
 # Chrome Extension Builder - Scratchpad
 
-## Project Overview
-Building a Replit-like Chrome Extension Builder with chat interface and AI code generation.
-
-## Architecture
-- **Frontend**: HTML/CSS/JS with Monaco Editor for code display
-- **Backend**: FastAPI with WebSocket support
-- **Browser Automation**: Playwright for Chrome extension testing
-- **AI Integration**: Google Gen AI SDK + Gemini CLI for code generation
-- **Database**: In-memory storage (to be replaced with PostgreSQL)
-
 ## Current Status
-- ✅ Project setup and structure
-- ✅ Chat interface with WebSocket support
+- ✅ Basic FastAPI backend with WebSocket support
+- ✅ Frontend with chat interface and file management
+- ✅ Chrome extension generation using Gemini CLI
 - ✅ Browser automation with Playwright
-- ✅ AI integration with Google Gen AI SDK
-- ✅ Gemini CLI integration for code generation
-- ✅ Extension file generation and loading
-- ✅ Monaco Editor integration for code display
-- ✅ Environment variable management
-- ✅ API key configuration fixes
-- ✅ Gemini CLI path and subprocess fixes
-- ✅ Persistent extension folders per session
-- ✅ Correct Gemini CLI options implementation
-- ✅ Progress indicators and user feedback
-- ✅ Modern UI with dark theme
-- ✅ Extension folder viewer in IDE
-- ✅ Real-time CLI output streaming
-- ✅ **Browser event logging and debugging system**
-- ✅ **AI-powered debug analysis and bug fixing**
-- ✅ **Real-time event capture (clicks, errors, console logs)**
-- ✅ **Debug session management and log persistence**
+- ✅ Extension loading and testing in browser environment
+- ✅ Browser event logging and debugging system
+- ✅ AI-powered debug analysis and bug fixing
+- ✅ Real-time event capture (clicks, keyboard, navigation, errors)
+- ✅ Debug session management and log persistence
+- ✅ **NEW: Function calling with Gemini API**
+- ✅ **NEW: Automatic function calling for extension development**
+- ✅ **NEW: Compositional function calling for complex tasks**
+
+## Key Features Implemented
+
+### Core System
+- WebSocket-based real-time communication
+- File-based extension storage
+- Chrome extension manifest generation
+- Browser automation with Playwright
+- Extension loading in test environment
+
+### AI Integration
+- Gemini CLI integration for code generation
+- **NEW: Gemini API function calling**
+- **NEW: build_extension, fix_extension, improve_extension, answer_user_question functions**
+- **NEW: Automatic function selection based on user intent**
+- **NEW: Structured parameter extraction for each function**
+
+### Debug System
+- Browser event logging and debugging system
+- AI-powered debug analysis and bug fixing
+- Real-time event capture (clicks, keyboard, navigation, errors)
+- Debug session management and log persistence
+- Intelligent log analysis for extension improvement
+
+### Function Calling System
+- **build_extension**: Creates new Chrome extensions from scratch
+- **fix_extension**: Fixes issues and bugs in existing extensions
+- **improve_extension**: Enhances extensions with new features
+- **answer_user_question**: Answers general questions about Chrome extensions
+- **Automatic function calling**: Determines which function to call based on user message
+- **Compositional function calling**: Can chain multiple functions for complex tasks
 
 ## Progress Log
 
 ### 2024-12-19
-- ✅ Migrated from deprecated `google-generativeai` to new `google-genai` SDK
-- ✅ Updated ChatAgent to use new Google Gen AI client
-- ✅ Fixed Gemini CLI integration to use correct CLI options
-- ✅ Fixed JSON serialization issues with Extension objects
-- ✅ Updated Python version requirement to >=3.9 for google-genai compatibility
-- ✅ Resolved environment variable loading and API key configuration
-- ✅ Fixed Gemini CLI subprocess execution with full path
-- ✅ Resolved temporary directory cleanup issues
-- ✅ Implemented persistent extension folders per session
-- ✅ Added incremental extension modification support
-- ✅ Added comprehensive progress indicators and logging
-- ✅ Enhanced user experience with real-time feedback
-- ✅ Modernized UI with dark theme and modern design
-- ✅ Added extension folder viewer in IDE
-- ✅ Implemented real-time CLI output streaming to chat window
-- ✅ Added streaming to console logs with detailed output
-- ✅ **Implemented comprehensive browser event logging system**
-- ✅ **Added AI-powered debug analysis and bug fixing**
-- ✅ **Created real-time event capture (clicks, keyboard, navigation, errors)**
-- ✅ **Built debug session management with log persistence**
-- ✅ **Integrated debug logs with chat agent for intelligent analysis**
+- **Function calling implementation with Gemini API**
+  - Replaced manual conversation analysis with automatic function calling
+  - Defined 4 core functions: build_extension, fix_extension, improve_extension, answer_user_question
+  - Implemented automatic function selection based on user intent
+  - Added structured parameter extraction for each function type
+  - Integrated with existing Gemini CLI for code generation
+  - Maintained debug system integration
 
-### 2024-12-18
-- ✅ Fixed browser automation issues with persistent contexts
-- ✅ Implemented direct extension loading via launch arguments
-- ✅ Enhanced dummy extension with better visual indicators
-- ✅ Resolved environment variable loading issues
-- ✅ Fixed Pydantic validation errors
+- **Function Definitions**
+  - build_extension: Creates new extensions with requirements, features, target websites
+  - fix_extension: Fixes issues with error logs and current behavior context
+  - improve_extension: Enhances extensions with new features and performance improvements
+  - answer_user_question: Answers general questions about Chrome extension development
 
-### 2024-12-17
-- ✅ Set up project structure with modular design
-- ✅ Implemented chat interface with WebSocket support
-- ✅ Created browser automation with Playwright
-- ✅ Integrated AI code generation with Gemini CLI
-- ✅ Added Monaco Editor for code display
+- **Automatic Function Calling**
+  - Uses Gemini API with function declarations
+  - Low temperature (0.1) for deterministic function calls
+  - Conversation context analysis for function selection
+  - Fallback to general conversation when no function is needed
 
-## Technical Stack
-- **Backend**: Python FastAPI, Uvicorn, Pydantic
-- **Frontend**: HTML, CSS, JavaScript, Monaco Editor
-- **Browser Automation**: Playwright (Chromium)
-- **AI/Code Generation**: Google Gen AI SDK, Gemini CLI
-- **Package Management**: uv
-- **Environment**: Python 3.9+
+- **Integration with Existing Systems**
+  - Maintains compatibility with debug system
+  - Preserves Gemini CLI integration for code generation
+  - Keeps WebSocket streaming functionality
+  - Preserves browser automation and testing features
 
-## Key Features Implemented
-- Real-time chat interface with WebSocket
-- Browser automation with persistent contexts
-- Extension loading via command-line arguments
-- AI-powered code generation using Gemini CLI
-- Code display with syntax highlighting
-- Environment variable management
-- Error handling and fallback mechanisms
-- Persistent extension folders per session
-- Incremental extension modification
-- Comprehensive progress indicators and logging
-- Enhanced user experience with real-time feedback
-- Modern dark theme UI with professional design
-- Extension folder viewer with file navigation
-- Real-time CLI output streaming to chat window
-- Console streaming with detailed stdout/stderr
-- **Comprehensive browser event logging system**
+### 2024-12-19 (Latest)
+- **Corrected Pydantic AI Implementation**
+  - Fixed tool implementation to use proper `Tool` class instead of non-existent `@tool` decorator
+  - Implemented structured output models for function responses
+  - Used proper Pydantic AI patterns based on official documentation
+  - Added structured output models: `ExtensionResponse`, `QuestionResponse`, `DebugAnalysisResponse`, `ConversationResponse`
+
+- **Proper Tool Implementation**
+  - Used `pydantic_ai.tools.Tool` class for function definitions
+  - Implemented structured return types for all tools
+  - Added proper tool descriptions and parameter validation
+  - Maintained all existing functionality with cleaner API
+
+- **Structured Output Models**
+  - **ExtensionResponse**: For build/fix/improve operations with success status, messages, and file lists
+  - **QuestionResponse**: For answering questions with helpful links and next steps
+  - **DebugAnalysisResponse**: For debug analysis with issues, recommendations, and severity levels
+  - **ConversationResponse**: For general conversation with suggested actions
+
+- **Benefits of Corrected Implementation**
+  - **Proper API Usage**: Following Pydantic AI documentation correctly
+  - **Type Safety**: Structured output models provide better type checking
+  - **Better Error Handling**: Proper validation and error messages
+  - **Maintainability**: Cleaner code structure and better separation of concerns
+  - **Extensibility**: Easy to add new tools and output models
+
+- **Updated Architecture**
+  - **ChatAgent**: Uses proper `Tool` class and structured output models
+  - **FunctionExecutor**: Updated to work with Pydantic AI model
+  - **CLIHandler**: Maintains Gemini CLI integration
+  - **DebugHandler**: Uses structured output for debug analysis
+  - **Output Models**: New structured response models for better type safety
+
+### 2024-12-19 (Earlier)
+- **Browser event logging and debugging system**
+  - Implemented comprehensive browser event capture
+  - Added error tracking and console log collection
+  - Created debug session management
+  - Integrated with AI chat agent for log analysis
+
 - **AI-powered debug analysis and bug fixing**
-- **Real-time event capture (clicks, keyboard, navigation, errors)**
-- **Debug session management with log persistence**
-- **Intelligent log analysis for extension improvement**
+  - Enhanced chat agent to detect debug-related queries
+  - Implemented log analysis with Gemini API
+  - Added structured log formatting for AI consumption
+  - Created actionable recommendations system
 
-## Issues & Solutions
+- **Real-time event capture**
+  - Clicks, keyboard events, navigation tracking
+  - DOM changes, scroll events, window resizes
+  - Console logs and errors (including extension errors)
+  - Network errors and service worker events
 
-### ✅ Real-time CLI Output Streaming (2024-12-19)
-**Issue**: No visual feedback during Gemini CLI execution, poor user experience
-**Solution**:
-- Implemented real-time streaming of stdout/stderr from Gemini CLI
-- Added WebSocket integration for streaming to chat window
-- Created special CLI output styling with terminal-like appearance
-- Added color-coded output (green for stdout, red for stderr)
-- Implemented console streaming with detailed logging
-- Added CLI output container with header and scrollable content
-- Enhanced user experience with live progress updates
+- **Debug session management and log persistence**
+  - Session-specific log files
+  - In-memory and file-based storage
+  - Debug session lifecycle management
+  - Log analysis and summarization
 
-### ✅ Modern UI with Extension Folder Viewer (2024-12-19)
-**Issue**: Need modern UI and better file navigation
-**Solution**:
-- Completely redesigned UI with dark theme and modern aesthetics
-- Added extension folder viewer with file tree navigation
-- Implemented color-coded file icons for different file types
-- Added click-to-view functionality for extension files
-- Integrated browser controls into code panel header
-- Enhanced chat interface with modern message bubbles
-- Added responsive design for different screen sizes
-- Implemented smooth animations and transitions
+### 2024-12-19 (Later)
+- **Modular refactoring of chat agent**
+  - Split large agent.py file into multiple focused modules
+  - Created `function_caller.py` for function definitions and context creation
+  - Created `function_executor.py` for executing specific functions (build, fix, improve, answer)
+  - Created `cli_handler.py` for Gemini CLI integration and code generation
+  - Created `debug_handler.py` for debug-related functionality and log analysis
+  - Maintained all existing functionality while improving code organization
+  - Reduced agent.py from 1010 lines to 111 lines (89% reduction)
 
-### ✅ Gemini CLI Integration with Correct Options (2024-12-19)
-**Issue**: Need to use correct Gemini CLI options based on official documentation
-**Solution**:
-- Updated to use `--prompt` instead of `--execute` for providing prompts
-- Added `--yolo` flag to automatically accept all changes
-- Used `--model gemini-2.0-flash` (default model) instead of deprecated model
-- Implemented persistent extension folders per session ID
-- Added support for incremental modifications to existing extensions
+- **Modular Architecture**
+  - **FunctionCaller**: Handles function declarations and conversation context
+  - **FunctionExecutor**: Executes specific functions with proper parameter handling
+  - **CLIHandler**: Manages Gemini CLI integration and code generation
+  - **DebugHandler**: Handles debug requests and log analysis
+  - **ChatAgent**: Main orchestrator that coordinates all components
 
-### ✅ Persistent Extension Folders (2024-12-19)
-**Issue**: Need persistent storage for extensions across chat sessions
-**Solution**:
-- Created `extensions/{session_id}` folder structure
-- First generation creates complete extension
-- Subsequent generations modify existing files with context
-- Maintains extension state across multiple chat interactions
-- Provides file list context for incremental changes
+- **Benefits of Refactoring**
+  - Improved maintainability and readability
+  - Better separation of concerns
+  - Easier testing and debugging
+  - Reduced cognitive load when working on specific features
+  - Cleaner imports and dependencies
 
-### ✅ Gemini CLI Subprocess Execution (2024-12-19)
-**Issue**: `[WinError 2] The system cannot find the file specified` when calling Gemini CLI
-**Solution**:
-- Found Gemini CLI installed via npm at `C:\Users\vikra\AppData\Roaming\npm\gemini.cmd`
-- Updated subprocess to use full path: `r"C:\Users\vikra\AppData\Roaming\npm\gemini.cmd"`
-- Added npm bin directory to PATH environment variable
-- Fixed temporary directory cleanup to avoid file access conflicts
+### 2024-12-19 (Latest)
+- **Custom Icon Integration**
+  - Updated CLI handler to use custom robot icon from dummy_extension
+  - Added automatic icon copying (icon16.png, icon48.png, icon128.png)
+  - Prevented Gemini CLI from generating its own PNG images
+  - Updated agent prompts to mention custom icon usage
 
-### ✅ API Key Configuration (2024-12-19)
-**Issue**: `No API_KEY or ADC found` error with Google Generative AI
-**Solution**: 
-- Migrated to new `google-genai` SDK
-- Updated ChatAgent to use `genai.Client(api_key=self.api_key)`
-- Fixed environment variable loading in `main.py`
-- Updated Python version requirement to >=3.9
+- **Icon Management System**
+  - **Source**: Icons copied from `dummy_extension/` directory
+  - **Destination**: Automatically copied to new extension directories
+  - **Files**: icon16.png, icon48.png, icon128.png
+  - **Fallback**: Also copies to `images/` directory if it exists
 
-### ✅ Gemini CLI Integration (2024-12-19)
-**Issue**: `[WinError 193] %1 is not a valid Win32 application` and JSON serialization errors
-**Solution**:
-- Fixed `_call_gemini_cli` to use `gemini` command directly instead of script files
-- Updated subprocess call to use proper command structure
-- Fixed JSON serialization by converting Extension objects to dictionaries
-- Added proper error handling and fallback mechanisms
+- **PNG Generation Prevention**
+  - Added explicit instructions in CLI prompts: "Do NOT generate any PNG image files"
+  - Updated agent prompts to focus on functionality over image generation
+  - Ensures consistent icon usage across all generated extensions
 
-### ✅ Browser Automation (2024-12-18)
-**Issue**: Browser launching too quickly and closing / 500 Internal Server Error
-**Solution**:
-- Switched to `launch_persistent_context()` for persistent browser sessions
-- Used temporary `user_data_dir` for context management
-- Implemented global `_browser_manager` instance for persistence
-- Added proper Chrome launch arguments for extension loading
+- **Benefits of Custom Icon Integration**
+  - **Consistency**: All extensions use the same professional robot icon
+  - **Efficiency**: No time wasted generating placeholder icons
+  - **Quality**: Uses the existing high-quality icon design
+  - **Reliability**: Prevents broken or missing icon files
 
-### ✅ Extension Loading (2024-12-18)
-**Issue**: Dummy extension not visible after loading
-**Solution**:
-- Simplified `manifest.json` by removing problematic fields
-- Enhanced `content.js` with more prominent visual indicators
-- Implemented direct extension loading via `--load-extension` arguments
-- Added `--disable-extensions-except` for exclusive loading
+- **Updated Architecture**
+  - **CLIHandler**: Now includes `_copy_custom_icons()` method
+  - **Agent Prompts**: Include icon usage instructions
+  - **Function Caller**: Mentions custom icon integration
+  - **Fallback System**: Ensures icons are copied even if CLI fails
 
-### ✅ Environment Variables (2024-12-18)
-**Issue**: API keys not being loaded properly
-**Solution**:
-- Enhanced `load_dotenv()` to load from both root and package `.env` files
-- Implemented lazy initialization for ChatAgent to ensure environment variables are loaded first
-- Added explicit API key configuration for GenerativeModel
-- Ensured both `GOOGLE_API_KEY` and `GEMINI_API_KEY` are set consistently
-
-### ✅ Pydantic Validation (2024-12-18)
-**Issue**: Validation errors for missing fields
-**Solution**:
-- Added default values for `id` and `title` fields in models
-- Made `session_id` optional in ChatMessage
-- Updated route handlers to properly create ChatMessage objects
+### 2024-12-19 (Later)
 
 ## Next Steps
-1. Test the browser event logging and debug analysis system
-2. Verify debug session management and log persistence
-3. Test AI-powered bug fixing and improvement suggestions
-4. Add more sophisticated extension templates
-5. Implement extension validation and testing
-6. Add user authentication and session management
-7. Integrate with database for persistence
-8. Add extension marketplace features
-9. Enhance debug analysis with more detailed event tracking
-10. Add visual debug dashboard for real-time monitoring
+- Test the new function calling system with various user scenarios
+- Verify automatic function selection accuracy
+- Test compositional function calling for complex tasks
+- Validate integration with existing debug system
+- Test browser event logging and debug analysis system
+- Verify debug session management and log persistence
+- Test AI-powered bug fixing and improvement suggestions
+- Add more sophisticated extension templates
+- Implement extension validation and testing
+- Add user authentication and session management
+- Integrate with database for persistence
+- Add extension marketplace features
+- Enhance debug analysis with more detailed event tracking
+- Add visual debug dashboard for real-time monitoring
 
 ## Technical Notes
-- Browser automation uses Playwright's recommended approach for extensions
-- Gemini CLI integration provides powerful code generation capabilities
-- ChatAgent intelligently manages conversation flow and extension generation
-- Environment variables are loaded from multiple locations for reliability
-- Error handling includes fallback mechanisms for robustness
-- Gemini CLI is installed via npm and requires full path on Windows
-- Extensions are stored persistently in `extensions/{session_id}` folders
-- Incremental modifications maintain context across chat sessions
-- Comprehensive logging provides real-time feedback during operations
-- Real-time streaming provides live CLI output to both chat and console
-- Modern UI provides professional development experience
-- Extension folder viewer enables easy file navigation and editing 
+
+### Pydantic AI Integration
+- Uses Pydantic AI's `Agent` with `GeminiModel` for streamlined API
+- Function calling implemented using `@tool` decorators
+- Automatic type safety and validation through Pydantic models
+- Simplified conversation handling and response processing
+
+### Function Calling Implementation
+- Uses Pydantic AI's built-in function calling instead of verbose Google Gen AI API
+- Tool decorators provide automatic parameter validation and type checking
+- Cleaner error handling and more intuitive API
+- Reduced boilerplate code significantly
+
+### Function Workflow
+1. **build_extension** → **improve_extension** → **fix_extension** (typical workflow)
+2. **answer_user_question** (for general guidance)
+3. Automatic fallback to conversation for unclear requests
+
+### Debug Integration
+- Debug system continues to work alongside function calling
+- Debug requests bypass function calling for direct log analysis
+- Maintains all existing debug capabilities
+
+## Architecture
+
+### Function Calling Flow
+```
+User Message → Pydantic AI Agent → Tool Selection → Function Execution → Response
+```
+
+### Function Types
+- **build_extension**: New extension creation
+- **fix_extension**: Bug fixing and issue resolution  
+- **improve_extension**: Feature enhancement and optimization
+- **answer_user_question**: General guidance and education
+
+### Modular Architecture
+- **ChatAgent**: Main orchestrator that coordinates all components
+- **FunctionCaller**: Handles function declarations and conversation context
+- **FunctionExecutor**: Executes specific functions with proper parameter handling
+- **CLIHandler**: Manages Gemini CLI integration and code generation
+- **DebugHandler**: Handles debug requests and log analysis
+
+### Integration Points
+- **Chat Agent**: Main function calling orchestrator
+- **Gemini CLI**: Code generation backend
+- **Debug System**: Log analysis and bug detection
+- **Browser Manager**: Extension testing and validation
+- **WebSocket**: Real-time communication 

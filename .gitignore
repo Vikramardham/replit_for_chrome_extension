@@ -6,3 +6,8 @@ __pycache__/
 *$py.class
 **/**/*.pyc
 **/**/_pycache_
+src/chrome_extension_builder/browser/__pycache__/manager.cpython-311.pyc
+src/chrome_extension_builder/browser/__pycache__/manager.cpython-311.pyc
+src/chrome_extension_builder/chat/__pycache__/routes.cpython-311.pyc
+src/chrome_extension_builder/chat/__pycache__/routes.cpython-311.pyc
+src/chrome_extension_builder/chat/__pycache__/routes.cpython-311.pyc
